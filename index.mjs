@@ -159,15 +159,32 @@ async function FindProductUrlAndPriceData(g2aSearchQuery) {
   }
 }
 
-//const gameName = 'Elder Scrolls V: Skyrim';
+//const gameName = 'The Elder Scrolls V: Skyrim';
 //const gameName = 'Hogwarts Legacy';
 //const gameName = 'Terraria';
-//const gameName = 'Squad';
+const gameName = 'Squad';
 //const gameName = 'BeamNG.drive';
-const gameName = 'DayZ';
+//const gameName = 'DayZ';
+//const gameName = 'Hell Let Loose';
+//const gameName = 'Dota 2';
+//const gameName = 'Days Gone';
+//const gameName = 'Dying Light 2';
 
 const res = await FindProductUrlAndPriceData(gameName+' Steam Key GLOBAL');
-console.log(res);
+const res2 = await FindProductUrlAndPriceData(gameName+' - Steam Key - GLOBAL');
+const res3 = await FindProductUrlAndPriceData(gameName+' (PC) Steam Key GLOBAL');
+const res4 = await FindProductUrlAndPriceData(gameName+' (PC) - Steam Key - GLOBAL');
 
-const res2 = await FindProductUrlAndPriceData(gameName+' (PC) Steam Key GLOBAL');
-console.log(res2)
+function best(responsesArr) {
+  let tempBest = {};
+  let bestMatchNumber = 1000;
+  for (let res of responsesArr) {
+    if (res.nameMatchLowerBetterShouldBeLike5Max < bestMatchNumber) {
+      bestMatchNumber = res.nameMatchLowerBetterShouldBeLike5Max;
+      tempBest = res;
+    }
+  }
+  return tempBest.nameMatchLowerBetterShouldBeLike5Max < 2? tempBest : {};
+}
+
+console.log(best([res, res2, res3, res4]));
