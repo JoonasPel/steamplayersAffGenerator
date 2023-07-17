@@ -5,13 +5,13 @@ import { parse } from 'parse5';
 import leven from 'leven';
 
 // Configure the database connection
-const pool = new Pool({
-  user,
-  password,
-  host,
-  port,
-  database,
-});
+// const pool = new Pool({
+//   user,
+//   password,
+//   host,
+//   port,
+//   database,
+// });
 
 // Perform a query
 async function queryDatabase() {
