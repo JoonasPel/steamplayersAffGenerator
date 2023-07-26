@@ -1,45 +1,33 @@
 import axios from 'axios';
-import pkg from 'pg';
-const { Pool } = pkg;
 import { parse } from 'parse5';
 import leven from 'leven';
 
-// Configure the database connection
-// const pool = new Pool({
-//   user,
-//   password,
-//   host,
-//   port,
-//   database,
-// });
-
-// Perform a query
-async function queryDatabase() {
-  const client = await pool.connect();
-
-  try {
-    const result = await client.query('SELECT * FROM a_priority_table LIMIT 5');
-    console.log(result.rows);
-  } catch (error) {
-    console.error('Error executing query', error);
-  } finally {
-    client.release();
-  }
-}
 
 async function fetchWebsite(url, timeoutAsMs) {
   try {
     const response = await axios.get(url, {timeout: timeoutAsMs});
+    if (response.status !== 200) {
+      console.log("WARNING WARNING NOT 200 WARNING WARNING", response.status);
+      await new Promise(resolve => setTimeout(resolve, 30000));
+    }
     return response;
   } catch (error) {
     console.error('Error fetching '+url, error);
+    throw new Error("error error error fetching");
   }
 }
 async function FindProductUrlAndPriceData(g2aSearchQuery) {
   const url = 'https://www.g2a.com/category/games-c189?f%5Bdevice'+
     '%5D%5B0%5D=1118&f%5Bdrm%5D%5B0%5D=1&f%5Bproduct-kind%5D%5B0%5D'+
-    '=10&f%5Bregions%5D%5B0%5D=8355&query='
-  const response = await fetchWebsite(url+g2aSearchQuery, 5000);
+    '=10&f%5Bregions%5D%5B0%5D=8355&query=';
+  let response;
+  try {
+    response = await fetchWebsite(url+g2aSearchQuery, 5000);
+  } catch (error) {
+    await new Promise(resolve => setTimeout(resolve, 15000));
+    response = await fetchWebsite(url+g2aSearchQuery, 5000);
+  }
+  
   const document = parse(response.data);
   function findUlNodes(node) {
     // Check if the node is a <ul> with the desired class
@@ -154,37 +142,24 @@ async function FindProductUrlAndPriceData(g2aSearchQuery) {
     name: finalProduct[1],
     price: finalProduct[2],
     retailPrice: finalProduct[3],
-    salePercent: finalProduct[4],
-    nameMatchLowerBetterShouldBeLike5Max: bestSoFar,
+    nameMatch: bestSoFar,
   }
 }
-
-//const gameName = 'The Elder Scrolls V: Skyrim';
-//const gameName = 'Hogwarts Legacy';
-//const gameName = 'Terraria';
-const gameName = 'Squad';
-//const gameName = 'BeamNG.drive';
-//const gameName = 'DayZ';
-//const gameName = 'Hell Let Loose';
-//const gameName = 'Dota 2';
-//const gameName = 'Days Gone';
-//const gameName = 'Dying Light 2';
-
-const res = await FindProductUrlAndPriceData(gameName+' Steam Key GLOBAL');
-const res2 = await FindProductUrlAndPriceData(gameName+' - Steam Key - GLOBAL');
-const res3 = await FindProductUrlAndPriceData(gameName+' (PC) Steam Key GLOBAL');
-const res4 = await FindProductUrlAndPriceData(gameName+' (PC) - Steam Key - GLOBAL');
-
 function best(responsesArr) {
   let tempBest = {};
   let bestMatchNumber = 1000;
   for (let res of responsesArr) {
-    if (res.nameMatchLowerBetterShouldBeLike5Max < bestMatchNumber) {
-      bestMatchNumber = res.nameMatchLowerBetterShouldBeLike5Max;
+    if (res.nameMatch < bestMatchNumber) {
+      bestMatchNumber = res.nameMatch;
       tempBest = res;
     }
   }
-  return tempBest.nameMatchLowerBetterShouldBeLike5Max < 2? tempBest : {};
+  return tempBest.nameMatch < 2? tempBest : {};
 }
-
-console.log(best([res, res2, res3, res4]));
+export async function getProductInformation(gameName) {
+  const res = await FindProductUrlAndPriceData(gameName+' Steam Key GLOBAL');
+  const res2 = await FindProductUrlAndPriceData(gameName+' - Steam Key - GLOBAL');
+  const res3 = await FindProductUrlAndPriceData(gameName+' (PC) Steam Key GLOBAL');
+  const res4 = await FindProductUrlAndPriceData(gameName+' (PC) - Steam Key - GLOBAL');
+  return best([res, res2, res3, res4])
+};

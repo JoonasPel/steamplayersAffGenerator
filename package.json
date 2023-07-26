@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "axios": "^1.4.0",
+    "dotenv": "^16.3.1",
     "leven": "^4.0.0",
     "parse5": "^7.1.2",
     "pg": "^8.11.1"
